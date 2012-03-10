@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+
+	<style type="text/css">
+		/*
+		YUI 3.4.1 (build 4118)
+		Copyright 2011 Yahoo! Inc. All rights reserved.
+		Licensed under the BSD License.
+		http://yuilibrary.com/license/
+		*/
+		html{color:#000;background:#FFF}body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}table{border-collapse:collapse;border-spacing:0}fieldset,img{border:0}address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal}ol,ul{list-style:none}caption,th{text-align:left}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}q:before,q:after{content:''}abbr,acronym{border:0;font-variant:normal}sup{vertical-align:text-top}sub{vertical-align:text-bottom}input,textarea,select{font-family:inherit;font-size:inherit;font-weight:inherit}input,textarea,select{*font-size:100%}legend{color:#000}
+
+		
+		
+		html,
+		body {
+			height: 100%;
+			overflow: hidden;
+		}
+		
+		
+		#logo-bar {
+			height: 41px;
+		}
+		
+		#logo-bar h1 {
+			background: transparent url(data:image/png;base64,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) no-repeat top left;	
+			text-indent: -99999px;
+			height: 29px;
+			width: 185px;
+			position: relative;
+			top: 6px;
+			left:17px;
+		}
+		
+		#top-grey-bar {
+			background-color: whiteSmoke;
+			height: 40px;
+			border-top: 1px solid #e5e5e5;
+			border-bottom: 1px solid #e5e5e5;
+		}
+		
+		#manage-bar {
+			height: 36px;
+			border-bottom: 1px solid #e5e5e5;
+			margin: 0 3px;
+		}
+		
+		iframe {
+			margin: 0 3px;
+		}
+		
+		#bottom-video-bar {
+			border-top: 1px solid #e5e5e5;
+			background-color: whiteSmoke;
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			width: 100%;
+			height: 160px;
+			display: none;
+		}
+		
+	</style>
+
+	<script>
+	
+	// Emulate hangout container behaviours such as chatpane
+	
+
+	// Set interval to listen for changes triggered
+
+	</script>
+
+</head>
+<body>
+
+
+	<div id="logo-bar">
+		<h1>Google+ Hangouts</h1>
+	</div>
+	<div id="top-grey-bar"></div>
+	<div id="manage-bar"></div>
+	<!-- Google Hangout look and feel -->
+
+	<iframe id="__gadget_3" 
+		name="__gadget_3"
+		src="gadget.xml.html" 
+		scrolling="no"
+		marginwidth="0"
+		marginheight="0"
+		frameborder="0"
+		vspace="0"
+		hspace="0"
+		height="200"
+		width="320"
+		style="height: 100%; width: 100%;"></iframe>
+
+	<div id="bottom-video-bar"></div>
+
+
+</body>
+</html>

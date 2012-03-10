@@ -1,0 +1,70 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<title></title>
+		<style type="text/css">
+			/*
+			YUI 3.4.1 (build 4118)
+			Copyright 2011 Yahoo! Inc. All rights reserved.
+			Licensed under the BSD License.
+			http://yuilibrary.com/license/
+			*/
+			html{color:#000;background:#FFF}body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,textarea,p,blockquote,th,td{margin:0;padding:0}table{border-collapse:collapse;border-spacing:0}fieldset,img{border:0}address,caption,cite,code,dfn,em,strong,th,var{font-style:normal;font-weight:normal}ol,ul{list-style:none}caption,th{text-align:left}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}q:before,q:after{content:''}abbr,acronym{border:0;font-variant:normal}sup{vertical-align:text-top}sub{vertical-align:text-bottom}input,textarea,select{font-family:inherit;font-size:inherit;font-weight:inherit}input,textarea,select{*font-size:100%}legend{color:#000}
+
+			body {
+				font-family: Arial;	
+			}
+			
+			#message {
+				font-size: 20px;
+			}
+			
+			#participants-content {
+				position: absolute;
+				top: 0px;
+				right: 10px;
+			}
+			
+			#UI {
+				width: 800px;
+				margin: 0 auto;
+				position: relative;
+			}
+			
+			h2 {
+				font-size: 24px;
+				margin: 10px 0;
+			}
+			
+			form {
+				margin-top: 10px;
+			}
+
+		</style>
+	</head>
+	<body>
+
+		<div id="UI">
+
+
+			<div id="participants-content">
+				<h2>Participants</h2>
+				<ul id="participants"></ul>
+			</div>
+			
+
+			<form method="post" action="ui.html" id="form">
+				<input type="text" id="new-message" placeholder="New shared message" />
+				<input type="submit" id="update" value="Update" />
+			</form>
+
+			<h2>Shared message</h2>
+
+			<div id="message">(waiting...)</div>
+
+			
+
+		</div>
+
+	</body>
+</html>
