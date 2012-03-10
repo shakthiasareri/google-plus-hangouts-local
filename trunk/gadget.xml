@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Module>
+	<ModulePrefs title="(NAME)">
+		<Require feature="rpc"/>
+		<Require feature="views"/>
+	</ModulePrefs>
+	<Content type="html">
+	<![CDATA[
+		<script src="https://hangoutsapi.talkgadget.google.com/hangouts/api/hangout.js?v=0.2"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+		<script>
+			function load(src) {
+				var s = document.createElement('script');
+				s.type = 'text/javascript';
+				s.src = src + "?r=" + Math.random() * 9999999;
+				document.head.appendChild(s);
+			}
+			load("https://(PATH)/App.js");
+			load("https://(PATH)/Bootstrap.js");
+		</script>
+		
+	]]>
+	</Content>
+</Module>
