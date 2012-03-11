@@ -1,0 +1,80 @@
+#summary Current status of emulating Google+ Hangouts locally
+
+== gapi.hangout ==
+
+=== Classes ===
+
+Complete
+
+=== Functions ===
+
+|| *Function* || *Matches live* || *Notes* ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.getEnabledParticipants getEnabledParticipants] || Untested || Theoretical ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.getHangoutUrl getHangoutUrl] || Yes || Returns a fixed string ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.getHangoutId getHangoutId] || Yes || Returns a fixed string||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.getLocale getLocale] || Yes || Returns "en-US" ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.getParticipantById getParticipantById] || Untested || Theoretical ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.getParticipantId getParticipantId] || No || Not Implemented ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.getParticipants getParticipants] || Untested || Theoretical ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.getEnabledParticipants hideApp] || No || Not Implemented ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.isApiReady isApiReady] || No || Emulator assumes Api is ready ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.isAppVisible isAppVisible] || No || Not Implemented ||
+
+
+
+=== Event Functions ===
+
+|| *Function* || *Matches live* || *Notes* ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.onApiReady onApiReady] || No || Emulator assumes Api is ready ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.onAppVisible onAppVisible] || No || Not Implemented ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.onEnabledParticipantsChanged onEnabledParticipantsChanged] || No || Not Implemented ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.onParticipantsAdded onParticipantsAdded] || Untested || ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.onParticipantsChanged onParticipantsChanged] || Untested || ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.onParticipantsDisabled onParticipantsDisabled] || No || Not Implemented ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.onParticipantsEnabled onParticipantsEnabled] || No || Not Implemented ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.onParticipantsRemoved onParticipantsRemoved] || No || Not Implemented ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.onParticipantsRemoved onParticipantsRemoved] || No || Not Implemented ||
+
+----
+
+== gapi.hangout.av ==
+
+Not Implemented
+
+----
+
+== gapi.hangout.av.effects ==
+
+Not Implemented
+
+----
+
+== gapi.hangout.data ==
+
+=== Classes ===
+
+Complete
+
+=== Functions ===
+
+|| *Function* || *Matches live* || *Notes* ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.data.clearValue clearValue] || Untested || Theoretical ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.data.getKeys getKeys] || Untested || Theoretical ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.data.getValue getValue] || Untested || Theoretical ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.data.getState getState] || Unverified || ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.data.getStateMetadata getStateMetadata] || Unverified || ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.data.setValue setValue] || Untested || Theoretical ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.data.submitDelta submitDelta] || Unverified || ||
+
+=== Event Functions ===
+
+|| *Function* || *Matches live* || *Notes* ||
+|| [https://developers.google.com/+/hangouts/reference#gapi.hangout.data.onStateChanged onStateChanged] || Unverified || ||
+
+----
+
+== gapi.hangout.layout ==
+
+Not Implemented
+
+----
