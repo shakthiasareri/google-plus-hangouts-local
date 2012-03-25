@@ -1,48 +1,18 @@
-/// <reference path="jquery-vsdoc.js" />
+﻿/// <reference path="jquery-vsdoc.js" />
 /// <reference path="json2.min.js" />
+/// <reference path="hangout-vsdoc.js" />
 
 
-window.onkeydown = function (e) {
-	if (e.keyCode == 36) {
-		localStorage.clear();
-	}
-};
+var PARTICIPANT = null,
+	NAME = "googleplushangoutslocal",
+	UPDATE_RATE = 100,
+	TIMEOUT = 4;
+
 
 
 this.gapi = new function () {
 
 	this.hangout = new function () {
-
-		// globals
-
-
-		var USER = null,
-			NAME = "hogswash",
-			UPDATE_RATE = 100,
-			TIMEOUT = 4;
-
-
-		// participant type class
-
-		function Participant(id, hasMicrophone, hasCamera, hasAppEnabled, personId, personDisplayName, personImgUrl) {
-			this.id = id;
-			this.displayIndex = undefined;
-			this.hasMicrophone = hasMicrophone;
-			this.hasCamera = hasCamera;
-			this.hasAppEnabled = hasAppEnabled;
-			this.person = {
-				id: personId,
-				displayName: personDisplayName,
-				image: {
-					url: personImgUrl
-				}
-			};
-		}
-
-
-		// utility
-
-		// localstorage handler
 
 		var Storage = new function () {
 
@@ -115,9 +85,6 @@ this.gapi = new function () {
 
 		}
 
-
-
-
 		// helper methods
 
 		function makeIdHelper_(num) {
@@ -142,35 +109,382 @@ this.gapi = new function () {
 			return Storage.get("userDeltaTimestamps", {})
 		}
 
+		// TODO
+		// https://developers.google.com/+/api/latest/people#resource
+		function Person() { }
 
+		function Participant(id, hasMicrophone, hasCamera, hasAppEnabled, personId, personDisplayName, personImgUrl) {
+			/// <summary>
+			///		A Participant instance represents a person who has joined a Google hangout. Hangout participant fields should not be modified.
+			///		&#10; - Each Participant has a person field which is similar to a subset of Google+ API person. You can get a list of all participants using getParticipants.
+			///		&#10; - A Participant instance might not contain all of the fields described below the only fields that a participant is guaranteed to contain are hangoutId and hasAppInstalled.
+			/// </summary>
+			/// <param name="id" type="string">
+			///		A string uniquely identifying this participant in the hangout. It is not suitable for display to the user.
+			///		&#10; - Each time a user joins a hangout, they are assigned a new participant ID. This ID is used to identify a participant throughout the API.
+			///	</param>
+			/// <param name="displayIndex" type="number">
+			///		True if the participant has a microphone installed.
+			///	</param>
+			/// <param name="hasMicrophone" type="boolean">
+			///		The index of the participant on the filmstrip, 0-based. Can be null.
+			///	</param>
+			/// <param name="hasCamera" type="boolean">
+			///		True if the participant has a video camera installed.
+			///	</param>
+			/// <param name="hasAppEnabled" type="boolean">
+			///		True if the participant has this app enabled and running in this hangout.
+			///	</param>
+			/// <param name="person" type="Person">
+			///		The representation of the participant's Google+ person.
+			///		&#10; - This field and its sub-fields are not present if the participant has not enabled the app.
+			///	</param>
 
-		// participant private vars
+			this.id = id;
+			this.displayIndex = undefined;
+			this.hasMicrophone = hasMicrophone;
+			this.hasCamera = hasCamera;
+			this.hasAppEnabled = hasAppEnabled;
+			this.person = {
+				id: personId,
+				displayName: personDisplayName,
+				image: {
+					url: personImgUrl
+				}
+			};
+		}
+
+		// event classes
+
+		var ApiReadyEvent = function () {
+			/// <summary>Contains information relating to the API becoming ready.</summary>
+			/// <returns type="boolean">Indicates whether the API is ready.</returns>
+			this.isApiReady = apiReady_;
+		}
+
+		var AppVisibleEvent = function () {
+			/// <summary>Provides information about an AppVisible event.</summary>
+			/// <returns type="boolean">Indicates whether the app is visible.</returns>
+			this.isAppVisible = appVisible_;
+		}
+
+		var EnabledParticipantsChangedEvent = function () {
+			/// <summary>Provides information about an EnabledParticipantsChanged event.</summary>
+			/// <returns type="Array.&lt;gapi.hangout.Participant&gt;">List of all participants with the app enabled.</returns>
+			this.enabledParticipants = this.getEnabledParticipants();
+		}
+
+		var ParticipantsAddedEvent = function () {
+			/// <summary>Provides information about a ParticipantsAdded event.</summary>
+			/// <returns type="Array.&lt;gapi.hangout.Participant&gt;">List of the newly added participants.</returns>
+			this.addedParticipants = addedParticipants_;
+		}
+
+		var ParticipantsChangedEvent = function () {
+			/// <summary>Provides information about a ParticipantsChanged event.</summary>
+			/// <returns type="Array.&lt;gapi.hangout.Participant&gt;">List of the participants currently in the hangout.</returns>
+			this.participants = participants_;
+		}
+
+		var ParticipantsDisabledEvent = function () {
+			/// <summary>Contains information relating to newly disabled participants.</summary>
+			/// <returns type="Array.&lt;gapi.hangout.Participant&gt;">List of the newly disabled participants.</returns>
+			this.disabledParticipants = disabledParticipants_;
+		}
+
+		var ParticipantsEnabledEvent = function () {
+			/// <summary>Contains information relating to newly enabled participants.</summary>
+			/// <returns type="Array.&lt;gapi.hangout.Participant&gt;">List of the newly enabled participants.</returns>
+			this.enabledParticipants = this.getEnabledParticipants();
+		}
+
+		var ParticipantsRemovedEvent = function () {
+			/// <summary>Provides information about a ParticipantsRemoved event.</summary>
+			/// <returns type="Array.&lt;gapi.hangout.Participant&gt;">List of the participants who have left the hangout.</returns>
+			this.removedParticipants = removedParticipants_;
+		}
+
 
 		var participants_ = addedParticipants_ = removedParticipants_ = disabledParticipants_ = [],
 			apiReady_ = appVisible_ = true;
 
 
-
-
-
-
-
-
-
-
-		USER = new Participant(makeIdHelper_(12), true, true, true, makeIdHelper_(7), "William-" + makeIdHelper_(4), "test.jpg");
-		USER.displayIndex = participants_.length + removedParticipants_.length;
+		// Construct current participant
+		PARTICIPANT = new Participant(makeIdHelper_(12), true, true, true,
+			makeIdHelper_(7), "William-" + makeIdHelper_(4), "https://lh5.googleusercontent.com/-FQa0HRy7ZsE/AAAAAAAAAAI/AAAAAAAAAAA/JDl93NPYKnM/s96-c/photo.jpg");
+		PARTICIPANT.displayIndex = participants_.length + removedParticipants_.length;
 
 		var serverParticipants = Storage.get("participants", []);
-		serverParticipants.push(USER);
+		serverParticipants.push(PARTICIPANT);
 		Storage.set("participants", serverParticipants);
 
 		// add to local storage to not fire added event
 		participants_ = serverParticipants;
 
 
-		// update
 
+		// public participant methods
+
+		this.getEnabledParticipants = function () {
+			/// <summary>Gets the participants who have enabled the app.</summary>
+			/// <returns type="Array.&lt;gapi.hangout.Participant&gt;"></returns>
+			var retVal = [];
+			$.each(participants_, function (participantIndex, participant) {
+				if (participant.hasAppEnabled) {
+					retVal.push(participant);
+				}
+			});
+			return retVal;
+		}
+
+
+		this.getHangoutUrl = function () {
+			/// <summary>Gets the URL for the hangout.</summary>
+			/// <example>https://hangoutsapi.talkgadget.google.com/hangouts/1b8d9e10742f576bc994e18866ea</example>
+			/// <returns type="string"></returns>
+			return "localhost";
+		}
+
+
+		this.getHangoutId = function () {
+			/// <summary>Gets an identifier for the hangout guaranteed to be unique for the hangout's duration. The API makes no other guarantees about this identifier.</summary>
+			/// <example>muvc-private-chat-99999a93-6273-390d-894a-473226328d79@groupchat.google.com</example>
+			/// <returns type="string"></returns>
+			return "muvc-private-chat-" + makeIdHelper_(10) + "@localhost";
+		}
+
+		this.getLocale = function () {
+			/// <summary>Gets the locale for the participant in the hangout.</summary>
+			/// <example>Example: 'en-US'</example>
+			/// <returns type="string"></returns>
+			return window.navigator.language;
+		}
+
+		this.getParticipantById = function (participantId) {
+			/// <summary>Gets the participant with the given id. Returns null if no participant exists with the given id.</summary>
+			/// <param name="participantId" type="string"></param>
+			/// <returns type="gapi.hangout.Participant"></returns>
+			$.each(participants_, function (participantIndex, participant) {
+				if (participant.id == participantId) {
+					return participant;
+				}
+			});
+			return null;
+		}
+
+		this.getParticipantId = function () {
+			/// <summary>Gets the id of the local participant. A user is assigned a new id each time they join a hangout.</summary>
+			/// <example>hangout65A4C551_ephemeral.id.google.com^354e9d1ed0</example>
+			/// <returns type="string"></returns>
+			return PARTICIPANT.id;
+		}
+
+		this.getParticipants = function () {
+			/// <summary>
+			///		Gets the participants in the hangout.
+			///		&#10; - Note that the list of participants reflects the current state on the hangouts server.
+			///		&#10; - There may be a small window of time where the local participant (returned from getParticipantId()) is not in the returned array.
+			///	</summary>
+			/// <returns type="Array.&lt;gapi.hangout.Participant&gt;"></returns>
+			return participants_;
+		}
+
+		this.hideApp = function () {
+			/// <summary>
+			///		Hide the app and show the video feed in the main hangout window.
+			///		&#10; - The app will continue to run while it is hidden.
+			///	</summary>
+			/// <returns type="undefined"></returns>
+			appVisible_ = false;
+		}
+
+
+		this.isApiReady = function () {
+			/// <summary>
+			///		Returns true if the gapi.hangout API is initialized; false otherwise.
+			///		&#10; - Before the API is initialized, data values may have unexpected values.
+			///	</summary>
+			/// <returns type="boolean"></returns>
+			return apiReady_;
+		}
+
+		this.isAppVisible = function () {
+			/// <summary>Returns true if the app is visible in the main hangout window, false otherwise.</summary>
+			/// <returns type="boolean"></returns>
+			return appVisible_;
+		}
+
+
+
+
+
+		// public participant event methods
+
+		this.onAppVisible = new function () {
+			var callbacks = [];
+			this.add = function (callback) {
+				/// <summary>
+				///		Adds a callback to be called when the gapi.hangout API becomes ready to use.
+				///		&#10; - If the API is already initialized, the callback will be called at the next event dispatch.
+				///	</summary>
+				/// <param type="function(gapi.hangout.ApiReadyEvent)" name="callback">The callback to add.</param>
+				callbacks.push(callback);
+			}
+			this.remove = function (callback) {
+				/// <summary>Removes a callback previously added by onApiReady.add.</summary>
+				/// <param type="function(gapi.hangout.ApiReadyEvent)" name="callback">The callback to add.</param>
+				callbacks.splice(callbacks.indexOf(callback), 1);
+			}
+			// Private method
+			this.trigger_ = function () {
+				$.each(callbacks, function (callbackIndex, callback) {
+					callback(new AppVisibleEvent());
+				});
+			}
+		}
+
+		this.onEnabledParticipantsChanged = new function () {
+			var callbacks = [];
+			this.add = function (callback) {
+				/// <summary>
+				///		Adds a callback to be called whenever the set of "participants with the app enabled" changes.
+				///		&#10; - The argument to the callback is an event that holds all participants who have enabled the app since the last time the event fired.
+				///	</summary>
+				/// <param type="function(gapi.hangout.EnabledParticipantsChangedEvent)" name="callback">The callback to add.</param>
+				callbacks.push(callback);
+			}
+			this.remove = function (callback) {
+				/// <summary>Removes a callback previously added by onEnabledParticipantsChanged.add.</summary>
+				/// <param type="function(gapi.hangout.EnabledParticipantsChangedEvent)" name="callback">The callback to remove.</param>
+				callbacks.splice(callbacks.indexOf(callback), 1);
+			}
+			// Private method
+			this.trigger_ = function () {
+				$.each(callbacks, function (callbackIndex, callback) {
+					callback(new EnabledParticipantsChangedEvent());
+				});
+			}
+		}
+
+
+		this.onParticipantsAdded = new function () {
+			var callbacks = [];
+			this.add = function (callback) {
+				/// <summary>
+				///		Adds a callback to be called whenever participants join the hangout.
+				///		&#10; - The argument to the callback is an event that holds the particpants who have joined since the last time the event fired.
+				///	</summary>
+				/// <param type="function(gapi.hangout.ParticipantsAddedEvent)" name="callback">The callback to add.</param>
+				callbacks.push(callback);
+			}
+			this.remove = function (callback) {
+				/// <summary>Removes a callback previously added by onParticipantsAdded.add.</summary>
+				/// <param type="function(gapi.hangout.ParticipantsAddedEvent)" name="callback">The callback to remove.</param>
+				callbacks.splice(callbacks.indexOf(callback), 1);
+			}
+			// Private method
+			this.trigger_ = function () {
+				$.each(callbacks, function (callbackIndex, callback) {
+					callback(new ParticipantsAddedEvent());
+				});
+			}
+		}
+
+		this.onParticipantsChanged = new function () {
+			var callbacks = [];
+			this.add = function (callback) {
+				/// <summary>
+				///		Adds callback to be called whenever there is any change in the participants in the hangout.
+				///		&#10; - The argument to the callback is an event that holds holds the participants currently in the hangout.
+				///	</summary>
+				/// <param type="function(gapi.hangout.ParticipantsChangedEvent)" name="callback">The callback to add.</param>
+				callbacks.push(callback);
+			}
+			this.remove = function (callback) {
+				/// <summary>Removes a callback previously added by onParticipantsChanged.add.</summary>
+				/// <param type="function(gapi.hangout.ParticipantsChangedEvent)" name="callback">The callback to remove.</param>
+				callbacks.splice(callbacks.indexOf(callback), 1);
+			}
+			// Private method
+			this.trigger_ = function () {
+				$.each(callbacks, function (callbackIndex, callback) {
+					callback(new ParticipantsChangedEvent());
+				});
+			}
+		}
+
+		this.onParticipantsDisabled = new function () {
+			var callbacks = [];
+			this.add = function (callback) {
+				/// <summary>
+				///		Adds a callback to be called whenever participants disable this app.
+				///		&#10; - The argument to the callback is an event that holds the participants who have disabled the app since the last time the event fired.
+				///	</summary>
+				/// <param type="function(gapi.hangout.ParticipantsDisabledEvent)" name="callback">The callback to add.</param>
+				callbacks.push(callback);
+			}
+			this.remove = function (callback) {
+				/// <summary>Removes a callback previously added by onParticipantsDisabled.add.</summary>
+				/// <param type="function(gapi.hangout.ParticipantsDisabledEvent)" name="callback">The callback to remove.</param>
+				callbacks.splice(callbacks.indexOf(callback), 1);
+			}
+			// Private method
+			this.trigger_ = function () {
+				$.each(callbacks, function (callbackIndex, callback) {
+					callback(new ParticipantsDisabledEvent());
+				});
+			}
+		}
+
+		this.onParticipantsEnabled = new function () {
+			var callbacks = [];
+			this.add = function (callback) {
+				/// <summary>
+				///		Adds a callback to be called whenever a participant in the hangout enables this app.
+				///		&#10; - The argument to the callback is an event that holds the set of participants who have enabled the app since the last time the event fired.
+				///	</summary>
+				/// <param type="function(gapi.hangout.ParticipantsEnabledEvent)" name="callback">The callback to add.</param>
+				callbacks.push(callback);
+			}
+			this.remove = function (callback) {
+				/// <summary>Removes a callback previously added by onParticipantsEnabled.add.</summary>
+				/// <param type="function(gapi.hangout.ParticipantsEnabledEvent)" name="callback">The callback to remove.</param>
+				callbacks.splice(callbacks.indexOf(callback), 1);
+			}
+			// Private method
+			this.trigger_ = function () {
+				$.each(callbacks, function (callbackIndex, callback) {
+					callback(new ParticipantsEnabledEvent());
+				});
+			}
+		}
+
+		this.onParticipantsRemoved = new function () {
+			var callbacks = [];
+			this.add = function (callback) {
+				/// <summary>
+				///		Adds a callback to be called whenever participants leave the hangout.
+				///		&#10; - The argument to the callback is an event that holds the participants who have left since the last time the event fired.
+				///	</summary>
+				/// <param type="function(gapi.hangout.ParticipantsRemovedEvent)" name="callback">The callback to add.</param>
+				callbacks.push(callback);
+			}
+			this.remove = function (callback) {
+				/// <summary>Removes a callback previously added by onParticipantsRemoved.add.</summary>
+				/// <param type="function(gapi.hangout.ParticipantsRemovedEvent)" name="callback">The callback to remove.</param>
+				callbacks.splice(callbacks.indexOf(callback), 1);
+			}
+			// Private method
+			this.trigger_ = function () {
+				$.each(callbacks, function (callbackIndex, callback) {
+					callback(new ParticipantsRemovedEvent());
+				});
+			}
+		}
+
+		/*
+		Update loop
+		*/
 		setInterval(function () {
 
 			var hasChanged = false,
@@ -224,8 +538,9 @@ this.gapi = new function () {
 			}
 
 
-			// get users who haven't updated their data in the timeout period
-
+			/*
+			Get users who haven't updated their data in the timeout period
+			*/
 
 			var userDeltaTimestamps = getUserDeltaTimestamps(),
 				serverParticipants = Storage.get("participants", []);
@@ -254,251 +569,414 @@ this.gapi = new function () {
 		}, UPDATE_RATE);
 
 
+		/*
+		gapi.hangout.av
+		*/
+
+		this.av = new function () {
+
+			// private vars
+			var isCameraMute_ = hasCamera_ = hasMicrophone_ = hasSpeakers_ = isMicrophoneMute_ = false,
+				volumes = {}
 
 
+			// private methods
 
 
+			// event classes
+
+			var CameraMuteEvent = function () {
+				/// <summary>Provides information about a CameraMute event.</summary>
+				/// <returns name="isCameraMute" type="boolean">Indicates whether the local participant is sending video.</returns>
+				this.isCameraMute = isCameraMute_;
+			}
+
+			var HasCameraEvent = function () {
+				/// <summary>Provides information about a HasCamera event.</summary>
+				/// <returns name="hasCamera" type="boolean">Indicates whether the local participant's camera is activated.</returns>
+				this.hasCamera = hasCamera_;
+			}
+
+			var HasMicrophoneEvent = function () {
+				/// <summary>Provides information about HasMicrophone events.</summary>
+				/// <returns name="hasMicrophone" type="boolean">Indicates whether the local participant's microphone is activated.</returns>
+				this.hasMicrophone = hasMicrophone_;
+			}
+
+			var HasSpeakersEvent = function () {
+				/// <summary>Provides information about HasSpeakers events.</summary>
+				/// <returns name="hasSpeakers" type="boolean">Indicates whether the local participant's audio speakers are activated.</returns>
+				this.hasSpeakers = hasSpeakers_;
+			}
+
+			var MicrophoneMuteEvent = function () {
+				/// <summary>Provides information about MicrophoneMuted events.</summary>
+				/// <returns name="isMicrophoneMute" type="boolean">Indicates whether the local participant's mic is muted.</returns>
+				this.isMicrophoneMute = isMicrophoneMute_;
+			}
+
+			var VolumesChangedEvent = function () {
+				/// <summary>Provides information about VolumesChanged events.</summary>
+				/// <returns name="volumes" type="Object.&lt;string, number&gt;">The volume level for each participant, keyed by participant id.</returns>
+				this.volumes = volumes_;
+			}
+
+			// public methods
 
 
+			this.clearAvatar = function (participantId) {
+				/// <summary>Resumes display of the video stream for a participant. Note this affects only the view of the local participant.</summary>
+				/// <param name="participantId" type="string">The id of the participant.</param>
+				/// <returns type="undefined"></returns>
+
+				console.error("Not implemented");
+				// TODO parent.postMessage("message", "*");
+
+			}
+
+			// BUG: Should return 2 element array
+			// https://developers.google.com/+/hangouts/reference#gapi.hangout.av.getParticipantAudioLevel
+			this.getParticipantAudioLevel = function (participantId) {
+				/// <summary>
+				///		Gets the audio level for a participant as set by setParticipantAudioLevel.
+				///		&#10; - Returns a two-element array where the first element is the level of the left audio channel and the second element is the level of the right audio channel.
+				///	</summary>
+				/// <param name="participantId" type="string">The id of the participant.</param>
+				/// <returns type="undefined"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.getAvatar = function (participantId) {
+				/// <summary>
+				///		Gets the URL for the avatar image for the given participant.
+				///		&#10; - Returns undefined if no avatar image is set for the participant.
+				///	</summary>
+				/// <param name="participantId" type="string">The id of the participant.</param>
+				/// <returns type="string"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.getCameraMute = function () {
+				/// <summary>Returns true if the local participants camera is currently sending video; false otherwise.</summary>
+				/// <returns type="boolean"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.getMicrophoneMute = function () {
+				/// <summary>Returns true if the mic is muted for the local participant; false otherwise.</summary>
+				/// <returns type="boolean"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.getParticipantVolume = function (participantId) {
+				/// <summary>Gets the current audio volume for the given participant, a number from 0 to 5, inclusive.</summary>
+				/// <param name="participantId" type="string">The id of the participant.</param>
+				/// <returns type="number"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.getVolumes = function () {
+				/// <summary>
+				///		Gets the current audio volume level for all participants.
+				///		&#10; - Returns an object with key/value pairs where the key is the participant id and the value is the volume for that participant.
+				///		&#10; - The volume is a number from 0 to 5, inclusive.
+				///	</summary>
+				/// <returns type="Object.&lt;string, number&gt;"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.hasCamera = function () {
+				/// <summary>Returns true if the local participant has an active camera, false otherwise.</summary>
+				/// <returns type="boolean"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.hasMicrophone = function () {
+				/// <summary>Returns true if the local participant has a working mic, false otherwise.</summary>
+				/// <returns type="boolean"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.hasSpeakers = function () {
+				/// <summary>True if the local participant has working audio speakers, false otherwise.</summary>
+				/// <returns type="boolean"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.isParticipantAudible = function (participantId) {
+				/// <summary>Retrieves the state of setParticipantAudible.</summary>
+				/// <param name="participantId" type="string">The id of the participant.</param>
+				/// <returns type="number"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.isParticipantVisible = function (participantId) {
+				/// <summary>Retrieves the state of setParticipantVisible.</summary>
+				/// <param name="participantId" type="string">The id of the participant.</param>
+				/// <returns type="number"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.requestParticipantMicrophoneMute = function (participantId) {
+				/// <summary>Prompts the participant to mute their audio.</summary>
+				/// <param name="participantId" type="string">The id of the participant.</param>
+				/// <returns type="undefined"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.setParticipantAudioLevel = function (participantId, audioLevel) {
+				/// <summary>
+				///		Sets the audio level of a participant as heard by only the local participant.
+				///		&#10; - The audio level for a participant is in the range 0-10 with 1 being the default, 
+				///		a number from 0 to 1 indicating that the audio should be quieter than the default and a number 
+				///		from 1 to 10 indicating that the audio should be louder than the default.
+				///		&#10; - The audio level can also be set independently for the right and left audio channels.
+				///	</summary>
+				/// <param name="participantId" type="string">The id of the participant.</param>
+				/// <param name="audioLevel" type="number|Array.&lt;number&gt;">
+				///		Either a single number indicating the audio level that should be set for both the right and left channels, 
+				///		or an array whose first element is the level for the left audio channel and second element is the level for the right audio channel.
+				/// </param>
+				/// <returns type="undefined"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.setAvatar = function (participantId, imageUrl) {
+				/// <summary>
+				///		Shows an image in place of the video stream for a participant. Note this affects only the view seen by the local participant.
+				///		&#10; - The other participants in the hangout will still see the video stream for the given participant.
+				///	</summary>
+				/// <param name="participantId" type="string">The id of the participant.</param>
+				/// <param name="imageUrl " type="string">The URL of an image to show as the video stream for the given participant.</param>
+				/// <returns type="undefined"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.setCameraMute = function (muted) {
+				/// <summary>Starts or stops the local participant from sending video to the other hangout participants.</summary>
+				/// <param name="muted" type="boolean">True if the local participant should stop sending video.</param>
+				/// <returns type="undefined"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.clearCameraMute = function () {
+				/// <summary>Reverts the camera mute state to the last state set by the user.</summary>
+				/// <returns type="undefined"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.setMicrophoneMute = function (muted) {
+				/// <summary>Mutes or unmutes the mic for the local participant.</summary>
+				/// <param name="muted" type="boolean">True if the local participant should be muted.</param>
+				/// <returns type="undefined"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.clearMicrophoneMute = function () {
+				/// <summary>Reverts the mic mute state to the last state set by the user.</summary>
+				/// <returns type="undefined"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.setParticipantAudible = function (participantId, audible) {
+				/// <summary>Sets the mute state of a participant as heard by only the local participant.</summary>
+				/// <param name="participantId" type="string">The id of a participant.</param>
+				/// <param name="audible" type="boolean">Indicates whether the given participant's audio should be heard by the local participant.</param>
+				/// <returns type="undefined"></returns>
+
+				console.error("Not implemented");
+
+			}
+
+			this.setParticipantVisible = function (participantId, visible) {
+				/// <summary>Sets the mute state of a participant as heard by only the local participant.</summary>
+				/// <param name="participantId" type="string">The id of a participant.</param>
+				/// <param name="audible" type="boolean">True if the given participant should be visible to the local participant.</param>
+				/// <returns type="undefined"></returns>
+
+				console.error("Not implemented");
+
+			}
 
 
+			// event functions
 
-		// event classes
-
-		var ApiReadyEvent = function ApiReadyEvent() {
-			this.isApiReady = apiReady_;
-		}
-
-		var AppVisibleEvent = function () {
-			this.isAppVisible = appVisible_;
-		}
-
-		var EnabledParticipantsChangedEvent = function () {
-			this.enabledParticipants = this.getEnabledParticipants();
-		}
-
-		var ParticipantsAddedEvent = function () {
-			this.addedParticipants = addedParticipants_;
-		}
-
-		var ParticipantsChangedEvent = function () {
-			this.participants = participants_;
-		}
-
-		var ParticipantsDisabledEvent = function () {
-			this.disabledParticipants = disabledParticipants_;
-		}
-
-		var ParticipantsEnabledEvent = function () {
-			this.enabledParticipants = this.getEnabledParticipants();
-		}
-
-		var ParticipantsRemovedEvent = function () {
-			this.removedParticipants = removedParticipants_;
-		}
-
-
-
-
-
-
-		// public participant methods
-
-		this.getEnabledParticipants = function () {
-			var retVal = [];
-			$.each(participants_, function (participantIndex, participant) {
-				if (participant.hasAppEnabled) {
-					retVal.push(participant);
+			this.onCameraMute = new function () {
+				var callbacks = [];
+				this.add = function (callback) {
+					/// <summary>Adds a callback to be called when the local participant starts or stops sending video.</summary>
+					/// <param type="function(gapi.hangout.av.CameraMuteEvent)" name="callback">The callback to add.</param>
+					callbacks.push(callback);
 				}
-			});
-			return retVal;
-		}
-
-
-		this.getHangoutUrl = function () {
-			return "getHangoutUrl response";
-		}
-
-
-		this.getHangoutId = function () {
-			return "getHangoutId response";
-		}
-
-		this.getLocale = function () {
-			return "en-US";
-		}
-
-		this.getParticipantById = function (participantId) {
-			$.each(participants_, function (participantIndex, participant) {
-				if (participant.id == participantId) {
-					return participant;
+				this.remove = function (callback) {
+					/// <summary>Removes a callback previously added by onCameraMute.add.</summary>
+					/// <param type="function(gapi.hangout.av.CameraMuteEvent)" name="callback">The callback to remove.</param>
+					callbacks.splice(callbacks.indexOf(callback), 1);
 				}
-			});
-			return null;
+				// Private method
+				this.trigger_ = function () {
+					$.each(callbacks, function (callbackIndex, callback) {
+						callback(new CameraMuteEvent());
+					});
+				}
+			}
+
+			this.onHasCamera = new function () {
+				var callbacks = [];
+				this.add = function (callback) {
+					/// <summary>
+					///		Adds a callback to be called when the local participant activates or deactivates their camera.
+					///		&#10; - "Activate" means the camera is connected and available (whether muted or not muted).
+					/// </summary>
+					/// <param type="function(gapi.hangout.av.HasCameraEvent)" name="callback">The callback to add.</param>
+					callbacks.push(callback);
+				}
+				this.remove = function (callback) {
+					/// <summary>Removes a callback previously added by onHasCamera.add.</summary>
+					/// <param type="function(gapi.hangout.av.HasCameraEvent)" name="callback">The callback to remove.</param>
+					callbacks.splice(callbacks.indexOf(callback), 1);
+				}
+				// Private method
+				this.trigger_ = function () {
+					$.each(callbacks, function (callbackIndex, callback) {
+						callback(new HasCameraEvent());
+					});
+				}
+			}
+
+			this.onHasMicrophone = new function () {
+				var callbacks = [];
+				this.add = function (callback) {
+					/// <summary>
+					///		Adds a callback to be called when the local participant activates or deactivates their mic.
+					///		&#10; - "Activate" means the mic is connected and available (whether muted or not muted).
+					/// </summary>
+					/// <param type="function(gapi.hangout.av.HasMicrophoneEvent)" name="callback">The callback to add.</param>
+					callbacks.push(callback);
+				}
+				this.remove = function (callback) {
+					/// <summary>Removes a callback previously added by onHasMicrophone.add.</summary>
+					/// <param type="function(gapi.hangout.av.HasMicrophoneEvent)" name="callback">The callback to remove.</param>
+					callbacks.splice(callbacks.indexOf(callback), 1);
+				}
+				// Private method
+				this.trigger_ = function () {
+					$.each(callbacks, function (callbackIndex, callback) {
+						callback(new HasMicrophoneEvent());
+					});
+				}
+			}
+
+			this.onHasSpeakers = new function () {
+				var callbacks = [];
+				this.add = function (callback) {
+					/// <summary>
+					///		Adds a callback to be called when the local participant activates or deactivates their audio speakers.
+					///		&#10; - "Activate" means the speakers are connected and available (whether the volume is turned up or down).
+					/// </summary>
+					/// <param type="function(gapi.hangout.av.HasSpeakersEvent)" name="callback">The callback to add.</param>
+					callbacks.push(callback);
+				}
+				this.remove = function (callback) {
+					/// <summary>Removes a callback previously added by onHasSpeakers.add.</summary>
+					/// <param type="function(gapi.hangout.av.HasSpeakersEvent)" name="callback">The callback to remove.</param>
+					callbacks.splice(callbacks.indexOf(callback), 1);
+				}
+				// Private method
+				this.trigger_ = function () {
+					$.each(callbacks, function (callbackIndex, callback) {
+						callback(new HasSpeakersEvent());
+					});
+				}
+			}
+
+			this.onMicrophoneMute = new function () {
+				var callbacks = [];
+				this.add = function (callback) {
+					/// <summary>Adds a callback to be called when the mic mute state for the local participant changes.</summary>
+					/// <param type="function(gapi.hangout.av.MicrophoneMuteEvent)" name="callback">The callback to add.</param>
+					callbacks.push(callback);
+				}
+				this.remove = function (callback) {
+					/// <summary>Removes a callback previously added by onMicrophoneMute.add.</summary>
+					/// <param type="function(gapi.hangout.av.MicrophoneMuteEvent)" name="callback">The callback to remove.</param>
+					callbacks.splice(callbacks.indexOf(callback), 1);
+				}
+				// Private method
+				this.trigger_ = function () {
+					$.each(callbacks, function (callbackIndex, callback) {
+						callback(new MicrophoneMuteEvent());
+					});
+				}
+			}
+
+			this.onVolumesChanged = new function () {
+				var callbacks = [];
+				this.add = function (callback) {
+					/// <summary>
+					///		Adds a callback to be called when the audio volume levels at the source changes for any participant.
+					///		&#10; - The argument to the callback is an event that holds the new volume levels for all participants.
+					/// </summary>
+					/// <param type="function(gapi.hangout.av.VolumesChangedEvent)" name="callback">The callback to add.</param>
+					callbacks.push(callback);
+				}
+				this.remove = function (callback) {
+					/// <summary>Removes a callback previously added by onVolumesChanged.add.</summary>
+					/// <param type="function(gapi.hangout.av.VolumesChangedEvent)" name="callback">The callback to remove.</param>
+					callbacks.splice(callbacks.indexOf(callback), 1);
+				}
+				// Private method
+				this.trigger_ = function () {
+					$.each(callbacks, function (callbackIndex, callback) {
+						callback(new VolumesChangedEvent());
+					});
+				}
+			}
+
+
+			/*
+			Update loop
+			*/
+
+			// setInterval(function() {}, UPDATE_RATE);
+
 		}
-
-		this.getParticipantId = function () {
-			return "getParticipantId response";
-		}
-
-		this.getParticipants = function () {
-			return participants_;
-		}
-
-		this.hideApp = function () { }
-
-
-		this.isApiReady = function () {
-			return apiReady_;
-		}
-
-		this.isAppVisible = function () {
-			return appVisible_;
-		}
-
-
-
-
-
-		// public participant event methods
-
-		this.onAppVisible = new function () {
-			var callbacks = [];
-			this.add = function (callback) {
-				callbacks.push(callback);
-			}
-			this.remove = function (callback) {
-				callbacks.splice(callbacks.indexOf(callback), 1);
-			}
-			// Private method
-			this.trigger_ = function () {
-				$.each(callbacks, function (callbackIndex, callback) {
-					callback(new AppVisibleEvent());
-				});
-			}
-		}
-
-		this.onEnabledParticipantsChanged = new function () {
-			var callbacks = [];
-			this.add = function (callback) {
-				callbacks.push(callback);
-			}
-			this.remove = function (callback) {
-				callbacks.splice(callbacks.indexOf(callback), 1);
-			}
-			// Private method
-			this.trigger_ = function () {
-				$.each(callbacks, function (callbackIndex, callback) {
-					callback(new EnabledParticipantsChangedEvent());
-				});
-			}
-		}
-
-		this.onParticipantsAdded = new function () {
-			var callbacks = [];
-			this.add = function (callback) {
-				callbacks.push(callback);
-			}
-			this.remove = function (callback) {
-				callbacks.splice(callbacks.indexOf(callback), 1);
-			}
-			// Private method
-			this.trigger_ = function () {
-				$.each(callbacks, function (callbackIndex, callback) {
-					callback(new ParticipantsAddedEvent());
-				});
-			}
-		}
-
-		this.onParticipantsChanged = new function () {
-			var callbacks = [];
-			this.add = function (callback) {
-				callbacks.push(callback);
-			}
-			this.remove = function (callback) {
-				callbacks.splice(callbacks.indexOf(callback), 1);
-			}
-			// Private method
-			this.trigger_ = function () {
-				$.each(callbacks, function (callbackIndex, callback) {
-					callback(new ParticipantsChangedEvent());
-				});
-			}
-		}
-
-		this.onParticipantsDisabled = new function () {
-			var callbacks = [];
-			this.add = function (callback) {
-				callbacks.push(callback);
-			}
-			this.remove = function (callback) {
-				callbacks.splice(callbacks.indexOf(callback), 1);
-			}
-			// Private method
-			this.trigger_ = function () {
-				$.each(callbacks, function (callbackIndex, callback) {
-					callback(new ParticipantsDisabledEvent());
-				});
-			}
-		}
-
-		this.onParticipantsEnabled = new function () {
-			var callbacks = [];
-			this.add = function (callback) {
-				callbacks.push(callback);
-			}
-			this.remove = function (callback) {
-				callbacks.splice(callbacks.indexOf(callback), 1);
-			}
-			// Private method
-			this.trigger_ = function () {
-				$.each(callbacks, function (callbackIndex, callback) {
-					callback(new ParticipantsEnabledEvent());
-				});
-			}
-		}
-
-		this.onParticipantsRemoved = new function () {
-			var callbacks = [];
-			this.add = function (callback) {
-				callbacks.push(callback);
-			}
-			this.remove = function (callback) {
-				callbacks.splice(callbacks.indexOf(callback), 1);
-			}
-			// Private method
-			this.trigger_ = function () {
-				$.each(callbacks, function (callbackIndex, callback) {
-					callback(new ParticipantsRemovedEvent());
-				});
-			}
-		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -523,12 +1001,9 @@ this.gapi = new function () {
 
 
 
-
-
 			// private methods
 
 			function getDelta() {
-
 				return Storage.get("delta", {
 					updates: [],
 					removes: [],
@@ -537,7 +1012,188 @@ this.gapi = new function () {
 			}
 
 
-			function Update() {
+
+			// event classes
+
+			function StateChangedEvent(addedKeys, removedKeys) {
+				/// <summary>Contains information relating to a change in the shared state.</summary>
+				/// <param name="addedKeys" type="Array.&lt;Object&gt;">
+				///		An array containing the newly added entries to the state metadata.
+				///		&#10; - See getStateMetadata for more information.
+				///	</param>
+				/// <param name="metadata" type="Object.&lt;string, Object&gt;">
+				///		The state metadata, also available via getStateMetadata.
+				///	</param>
+				/// <param name="removedKeys" type="Array.&lt;string&gt;">
+				///		List of the keys removed in this update.
+				///	</param>
+				/// <param name="state" type="Object.&lt;string, string&gt;">
+				///		The shared state, also available via getState.
+				///	</param>
+
+
+				this.addedKeys = addedKeys || [];
+				this.metadata = this_.getStateMetadata();
+				this.removedKeys = removedKeys || [];
+				this.state = this_.getState();
+			}
+
+
+			// public methods
+
+			this.clearValue = function (key) {
+				/// <summary>Clears a single key/value pair.</summary>
+				/// <remarks>This does not clear straightaway, it calls submitDelta</remarks>
+				/// <returns type="undefined"></summary>
+				this.submitDelta({}, [key]);
+			}
+
+			this.getKeys = function () {
+				/// <summary>Gets the keys in the shared state object, an array of strings.</summary>
+				/// <returns type="Array.&lt;string&gt;"></returns>
+				var retVal = [];
+				$.each(this.getState(), function (key) {
+					retVal.push(key)
+				});
+				return retVal;
+			}
+
+			this.getValue = function (key) {
+				/// <summary>Gets the keys in the shared state object, an array of strings.</summary>
+				/// <param name="key" type="string">The key to get the value for.</param>
+				/// <returns type="string"></returns>
+				return this.getState()[key];
+			}
+
+			this.getState = function () {
+				/// <summary>Gets the shared state object, a set of name/value pairs.</summary>
+				/// <returns type="Object.&lt;string, string&gt;"></returns>
+				var state = Storage.get("state", {});
+				return state;
+			}
+
+			this.getStateMetadata = function () {
+				/// <summary>
+				///		Gets the state metadata object, which contains the same key/value data as the shared state object retrieved via getState but augmented with additional information.
+				///		&#10; - Each metadata entry includes:
+				///		&#10;	key:		The key being added.
+				///		&#10;	value:		The new value being set.
+				///		&#10;	timestamp:	The server time that the key/value was most recently updated.
+				///		&#10;	timediff:		The difference in time on the server between the current time and the time the key/value was most recently updated.
+				///	</summary>
+				/// <returns type="Object.&lt;string, Object&gt;"></returns>
+
+				var retVal = {},
+					timestamps = getTimestamps(),
+					currentTime = newTimestamp();
+				$.each(this.getState(), function (stateKey, stateValue) {
+					retVal[stateKey] = {
+						key: stateKey,
+						value: stateValue,
+						// The server time that the key/value was most recently updated.
+						timestamp: timestamps[stateKey],
+						// The difference in time on the server between the current time and the time the key/value was most recently updated.
+						// Not working as expected on the live API
+						timediff: currentTime - timestamps[stateKey]
+					}
+
+				});
+				return retVal;
+			}
+
+			this.setValue = function (key, value) {
+				/// <summary>Sets a single key value pair.</summary>
+				/// <remarks>This does not set straightaway, it calls submitDelta</remarks>
+				/// <param name="key" type="string">The key to set.</param>
+				/// <param name="value" type="string">The value to set the key to.</param>
+				/// <returns type="undefined"></returns>
+				var delta = {};
+				delta[key] = value;
+				this.submitDelta(delta, []);
+			}
+
+			this.submitDelta = function (opt_updates, opt_removes) {
+				/// <summary>Submits a request to update the value of the shared state object.</summary>
+				/// <param name="opt_updates" type="Object.&lt;string, string&gt;">
+				///		Key/value pairs to add or overwrite.
+				///		&#10;The value in each key/value pair must be a string.
+				///		&#10;Notably, the value must not be any of a number, boolean, object, array, function, null, or undefined.
+				///	</param>
+				/// <param name="opt_removes" type="Array.&lt;string&gt;">A (possibly empty) array of key names to remove.</param>
+				/// <returns type="undefined"></returns>
+
+				var delta = getDelta(),
+					timestamp = newTimestamp();
+
+				if (!$.isEmptyObject(opt_updates)) {
+					var updateObj = {
+						updates: opt_updates,
+						timestamp: newTimestamp()
+					}
+					delta.updates.push(updateObj);
+					localDelta.updates.push(updateObj);
+					delta.timestamp = timestamp;
+					localDelta.timestamp = timestamp;
+				}
+
+				if (opt_removes.length > 0) {
+					var removeObj = {
+						removes: opt_removes,
+						timestamp: newTimestamp()
+					}
+					delta.removes.push(removeObj);
+					localDelta.removes.push(removeObj);
+					delta.timestamp = timestamp;
+					localDelta.timestamp = timestamp;
+				}
+
+				Storage.set("delta", delta);
+
+			}
+
+			// public events
+
+			this.onStateChanged = new function () {
+				var callbacks = [];
+				this.add = function (callback) {
+					/// <summary>
+					///		Adds a callback to be called when a new version of the shared state object is received from the server.
+					///		&#10; - The first parameter of the callback contains an array of values added to the shared state object.
+					///		&#10;	Each added value includes the following members:
+					///		&#10;	 - key:		The key being added.
+					///		&#10;	 - value:		The new value being set.
+					///		&#10;	 - timestamp:	The server time that the key/value was most recently updated.
+					///		&#10;	 - timediff:	The difference in time on the server between the current time and the time the key/value was most recently updated.
+					///		&#10; - The second parameter to the callback contains an array of key names that have been removed from the shared state object.
+					///		&#10; - The third paramater to the callback contains the current value of the shared state object.
+					///		&#10; - The fourth parameter to the callback contains the current value of the metadata for the shared state object.
+					///		&#10; - Note that the callback will be called for changes in the shared state which result from submitDelta calls made from this participant's app.
+					///	</summary>
+					/// <param name="callback" type="function(gapi.hangout.data.StateChangedEvent)">The callback to add.</param>
+
+
+					callbacks.push(callback);
+				}
+				this.remove = function (callback) {
+					/// <summary>Removes a callback previously added by onStateChanged.add.</summary>
+					/// <param name="callback" type="function(gapi.hangout.data.StateChangedEvent)">The callback to remove.</param>
+					callbacks.splice(callbacks.indexOf(callback), 1);
+				}
+				// Private method
+				this.trigger_ = function (evt) {
+					$.each(callbacks, function (callbackIndex, callback) {
+						callback(evt);
+					});
+				}
+			}
+
+
+
+			/*
+			Update loop
+			*/
+
+			setInterval(function () {
 
 				var eventsToDispatch = [],
 					currentTimestamp = newTimestamp(),
@@ -556,7 +1212,7 @@ this.gapi = new function () {
 					$.each(delta.updates, function (deltaUpdateItemIndex, updateItem) {
 
 
-
+						// TODO: Use grep
 						$.each(updateItem.updates, function (updateKey, updateValue) {
 
 							var hasLocalItem = false;
@@ -644,7 +1300,7 @@ this.gapi = new function () {
 				var lastUserToUpdateTimestamp = currentTimestamp;
 
 				var userDeltaTimestamps = getUserDeltaTimestamps();
-				userDeltaTimestamps[USER.id] = currentTimestamp;
+				userDeltaTimestamps[PARTICIPANT.id] = currentTimestamp;
 
 				$.each(userDeltaTimestamps, function (i, userDeltaTimestamp) {
 					lastUserToUpdateTimestamp = Math.min(lastUserToUpdateTimestamp, userDeltaTimestamp);
@@ -662,139 +1318,14 @@ this.gapi = new function () {
 				localDelta.updates = [];
 				localDelta.removes = [];
 
-			}
-
-
-
-
-			// event classes
-
-			function StateChangedEvent(addedKeys, removedKeys) {
-				this.addedKeys = addedKeys || [];
-				this.metadata = this_.getStateMetadata();
-				this.removedKeys = removedKeys || [];
-				this.state = this_.getState();
-			}
-
-
-
-
-
-			// public methods
-
-			this.clearValue = function (key) {
-				this.submitDelta({}, [key]);
-			}
-
-			this.getKeys = function () {
-				var retVal = [];
-				$.each(this.getState(), function (key) {
-					retVal.push(key)
-				});
-				return retVal;
-			}
-
-			this.getValue = function (key) {
-				return this.getState()[key];
-			}
-
-			this.getState = function () {
-				var state = Storage.get("state", {});
-				return state;
-			}
-
-			this.getStateMetadata = function () {
-				var retVal = {},
-					timestamps = getTimestamps(),
-					currentTime = newTimestamp();
-				$.each(this.getState(), function (stateKey, stateValue) {
-					retVal[stateKey] = {
-						key: stateKey,
-						value: stateValue,
-						// The server time that the key/value was most recently updated.
-						timestamp: timestamps[stateKey],
-						// The difference in time on the server between the current time and the time the key/value was most recently updated.
-						// Not working as expected on the live API
-						timediff: currentTime - timestamps[stateKey]
-					}
-
-				});
-				return retVal;
-			}
-
-			this.setValue = function (key, value) {
-				var delta = {};
-				delta[key] = value;
-				this.submitDelta(delta, []);
-			}
-
-			this.submitDelta = function (opt_updates, opt_removes) {
-
-				var delta = getDelta(),
-					timestamp = newTimestamp();
-
-				if (!$.isEmptyObject(opt_updates)) {
-					var updateObj = {
-						updates: opt_updates,
-						timestamp: newTimestamp()
-					}
-					delta.updates.push(updateObj);
-					localDelta.updates.push(updateObj);
-					delta.timestamp = timestamp;
-					localDelta.timestamp = timestamp;
-				}
-
-				if (opt_removes.length > 0) {
-					var removeObj = {
-						removes: opt_removes,
-						timestamp: newTimestamp()
-					}
-					delta.removes.push(removeObj);
-					localDelta.removes.push(removeObj);
-					delta.timestamp = timestamp;
-					localDelta.timestamp = timestamp;
-				}
-
-				Storage.set("delta", delta);
-
-			}
-
-
-
-			// public events
-
-			this.onStateChanged = new function () {
-				var callbacks = [];
-				this.add = function (callback) {
-					callbacks.push(callback);
-				}
-				this.remove = function (callback) {
-					callbacks.splice(callbacks.indexOf(callback), 1);
-				}
-				// Private method
-				this.trigger_ = function (evt) {
-					$.each(callbacks, function (callbackIndex, callback) {
-						callback(evt);
-					});
-				}
-			}
-
-
-
-
-
-
-			// auto update
-
-			setInterval(Update, UPDATE_RATE);
+			}, UPDATE_RATE);
 
 
 		}
 
 
 
-
-
 	}
 
 }
+

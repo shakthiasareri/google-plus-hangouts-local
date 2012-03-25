@@ -22,7 +22,7 @@
 		
 		
 		#logo-bar {
-			height: 41px;
+			height: 42px;
 		}
 		
 		#logo-bar h1 {
@@ -49,7 +49,7 @@
 		}
 		
 		iframe {
-			margin: 0 3px;
+			margin: 0 0;
 		}
 		
 		#bottom-video-bar {
@@ -66,11 +66,12 @@
 	</style>
 
 	<script>
-	
-	// Emulate hangout container behaviours such as chatpane
-	
 
-	// Set interval to listen for changes triggered
+		window.addEventListener("message", receiveMessage, false);
+
+		function receiveMessage(event) {
+			alert('a');  
+		}  
 
 	</script>
 
