@@ -11,7 +11,7 @@ $(function () {
 		document.head.appendChild(documentFragment.querySelectorAll("style")[0]);
 		document.body.appendChild(documentFragment.querySelectorAll("#UI")[0]);
 
-		App.DEBUG = true;
+		App.DEBUG_HANGOUT = true;
 		App.start();
 	});
 

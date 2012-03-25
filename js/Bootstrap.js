@@ -9,6 +9,8 @@ gapi.hangout.onApiReady.add(function (eventObj) {
 			var documentFragment = range.createContextualFragment(base64_decode(resp));
 			document.head.appendChild(documentFragment.querySelectorAll("style")[0]);
 			document.body.appendChild(documentFragment.querySelectorAll("#UI")[0]);
+
+			App.DEBUG_HANGOUT = false;
 			App.start();
 		});
 	}
