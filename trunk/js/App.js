@@ -1,5 +1,4 @@
 /// <reference path="helpers/jquery-vsdoc.js" />
-/// <reference path="helpers/json2.min.js" />
 /// <reference path="helpers/hangout.js" />
 
 var App = {
@@ -294,7 +293,7 @@ var App = {
 
 			$.each(CMD, function (namespace, functions) {
 
-				EDebugNamespace = $('<div />');
+				var EDebugNamespace = $('<div />');
 
 				EDebugNamespace.text(namespace);
 
@@ -326,7 +325,7 @@ var App = {
 
 			EDebugBar.css('left', (($("body").width() - EDebugBar.width()) / 2) + 'px');
 
-			$("body").append(EDebugBar);
+			$("body").append(EDebugBar).trigger("DebugBarAdded", EDebugBar);
 
 			window.onkeyup = function (e) {
 				if (e.altKey == 1 && e.shiftKey == 1 && e.keyCode == "112") {
@@ -335,12 +334,6 @@ var App = {
 			};
 
 		}
-
-
-
-
-
-
 
 
 		/*

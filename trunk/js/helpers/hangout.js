@@ -1,7 +1,4 @@
 ﻿/// <reference path="jquery-vsdoc.js" />
-/// <reference path="json2.min.js" />
-/// <reference path="hangout-vsdoc.js" />
-
 
 var PARTICIPANT = null,
 	NAME = "googleplushangoutslocal",
@@ -14,38 +11,27 @@ this.gapi = new function () {
 
 	this.hangout = new function () {
 
+
+		/*
+		Helpers
+		*/
+
 		var Storage = new function () {
 
-			function getNestedObjectProperty(ob, key) {
-				var path = key.split('.');
-				var objTraversals = 0;
-				function traverse(obj) {
-					if (typeof obj == 'object') {
-						for (var y in obj) {
-							if (y == path[objTraversals]) {
-								if (objTraversals == path.length - 1) {
-									return obj[y];
-								} else {
-									objTraversals++;
-									return traverse(obj[y]);
-								}
-							}
-						}
-					}
-					return null;
-				}
-				for (var x in ob) {
-					if (x == path[objTraversals]) {
-						if (objTraversals == path.length - 1) {
-							return ob[x] || "";
-						} else {
-							objTraversals++;
-							return traverse(ob[x]);
-						}
+			function getNestedObjectProperty(o, s) {
+				s = s.replace(/\[(\w+)\]/g, '.$1');
+				s = s.replace(/^\./, '');
+				var a = s.split('.');
+				while (a.length) {
+					var n = a.shift();
+					if (n in o) {
+						o = o[n];
+					} else {
+						return;
 					}
 				}
-				return null;
-			};
+				return o;
+			}
 
 			function updateNestedObjectProperty(obj, keyStr, value) {
 				var keyPath = keyStr.split('.');
@@ -85,8 +71,6 @@ this.gapi = new function () {
 
 		}
 
-		// helper methods
-
 		function makeIdHelper_(num) {
 			var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz",
 				str = "";
@@ -109,11 +93,74 @@ this.gapi = new function () {
 			return Storage.get("userDeltaTimestamps", {})
 		}
 
-		// TODO
-		// https://developers.google.com/+/api/latest/people#resource
-		function Person() { }
+		// Debug hook
 
-		function Participant(id, hasMicrophone, hasCamera, hasAppEnabled, personId, personDisplayName, personImgUrl) {
+		$(function () {
+			$("body").bind("DebugBarAdded", function (evt, EDebugBar) {
+
+				var functions = [{
+					name: 'reset()',
+					description: 'Clear all local data',
+					returns: 'undefined',
+					method: function () {
+						Storage.reset();
+						window.location.reload();
+					}
+				}];
+
+				var EDebugNamespace = $('<div />');
+				EDebugNamespace.text("local");
+				$.each(functions, function (key, val) {
+
+					var EDebugFunction = $('<a style="color: blue !important; display: block; margin: 0 15px;" href="#" title="' + val.description + '" />');
+					EDebugFunction.on("mouseover", function () {
+						$(this).css('color', 'purple !important');
+					}).on("mouseout", function () {
+						$(this).css('color', 'blue !important');
+					});
+
+					EDebugFunction.text(val.name + ":" + val.returns);
+					EDebugFunction.on("click", function (e) {
+						e.preventDefault();
+						console.group('Command:', val.name);
+						val.method();
+						console.groupEnd();
+					});
+
+					EDebugNamespace.append(EDebugFunction);
+
+				});
+
+				$(EDebugBar).append(EDebugNamespace);
+
+			});
+		});
+
+
+
+		/*****************************************************\
+		*
+		* gapi.hangout
+		*
+		\*****************************************************/
+
+
+		/*
+		Private
+		*/
+
+		var participants_ = addedParticipants_ = removedParticipants_ = disabledParticipants_ = [],
+			apiReady_ = appVisible_ = true;
+
+
+		/*
+		Classes
+		*/
+
+		// TODO: https://developers.google.com/+/api/latest/people#resource
+		this.Person = function() { }
+
+		this.Participant = function(id, hasMicrophone, hasCamera, hasAppEnabled, personId, personDisplayName, personImgUrl) {
 			/// <summary>
 			///		A Participant instance represents a person who has joined a Google hangout. Hangout participant fields should not be modified.
 			///		&#10; - Each Participant has a person field which is similar to a subset of Google+ API person. You can get a list of all participants using getParticipants.
@@ -153,8 +200,6 @@ this.gapi = new function () {
 				}
 			};
 		}
-
-		// event classes
 
 		var ApiReadyEvent = function () {
 			/// <summary>Contains information relating to the API becoming ready.</summary>
@@ -204,26 +249,9 @@ this.gapi = new function () {
 			this.removedParticipants = removedParticipants_;
 		}
 
-
-		var participants_ = addedParticipants_ = removedParticipants_ = disabledParticipants_ = [],
-			apiReady_ = appVisible_ = true;
-
-
-		// Construct current participant
-		PARTICIPANT = new Participant(makeIdHelper_(12), true, true, true,
-			makeIdHelper_(7), "William-" + makeIdHelper_(4), "https://lh5.googleusercontent.com/-FQa0HRy7ZsE/AAAAAAAAAAI/AAAAAAAAAAA/JDl93NPYKnM/s96-c/photo.jpg");
-		PARTICIPANT.displayIndex = participants_.length + removedParticipants_.length;
-
-		var serverParticipants = Storage.get("participants", []);
-		serverParticipants.push(PARTICIPANT);
-		Storage.set("participants", serverParticipants);
-
-		// add to local storage to not fire added event
-		participants_ = serverParticipants;
-
-
-
-		// public participant methods
+		/*
+		Functions
+		*/
 
 		this.getEnabledParticipants = function () {
 			/// <summary>Gets the participants who have enabled the app.</summary>
@@ -237,14 +265,12 @@ this.gapi = new function () {
 			return retVal;
 		}
 
-
 		this.getHangoutUrl = function () {
 			/// <summary>Gets the URL for the hangout.</summary>
 			/// <example>https://hangoutsapi.talkgadget.google.com/hangouts/1b8d9e10742f576bc994e18866ea</example>
 			/// <returns type="string"></returns>
 			return "localhost";
 		}
-
 
 		this.getHangoutId = function () {
 			/// <summary>Gets an identifier for the hangout guaranteed to be unique for the hangout's duration. The API makes no other guarantees about this identifier.</summary>
@@ -298,7 +324,6 @@ this.gapi = new function () {
 			appVisible_ = false;
 		}
 
-
 		this.isApiReady = function () {
 			/// <summary>
 			///		Returns true if the gapi.hangout API is initialized; false otherwise.
@@ -315,10 +340,9 @@ this.gapi = new function () {
 		}
 
 
-
-
-
-		// public participant event methods
+		/*
+		Event Functions
+		*/
 
 		this.onAppVisible = new function () {
 			var callbacks = [];
@@ -365,7 +389,6 @@ this.gapi = new function () {
 				});
 			}
 		}
-
 
 		this.onParticipantsAdded = new function () {
 			var callbacks = [];
@@ -447,7 +470,7 @@ this.gapi = new function () {
 				callbacks.push(callback);
 			}
 			this.remove = function (callback) {
-				/// <summary>Removes a callback previously added by onParticipantsEnabled.add.</summary>
+				/// <summary>Removes a callback prev iously added by onParticipantsEnabled.add.</summary>
 				/// <param type="function(gapi.hangout.ParticipantsEnabledEvent)" name="callback">The callback to remove.</param>
 				callbacks.splice(callbacks.indexOf(callback), 1);
 			}
@@ -481,6 +504,30 @@ this.gapi = new function () {
 				});
 			}
 		}
+
+		/*
+		init
+		*/
+
+		PARTICIPANT = new this.Participant(makeIdHelper_(12), true, true, true,
+			makeIdHelper_(7), "William-" + makeIdHelper_(4), "https://lh5.googleusercontent.com/-FQa0HRy7ZsE/AAAAAAAAAAI/AAAAAAAAAAA/JDl93NPYKnM/s96-c/photo.jpg");
+		PARTICIPANT.displayIndex = participants_.length + removedParticipants_.length;
+
+		var serverParticipants = Storage.get("participants", []);
+		serverParticipants.push(PARTICIPANT);
+		Storage.set("participants", serverParticipants);
+
+		// add to local storage to not fire added event
+		participants_ = serverParticipants;
+
+		/*
+		$(window).bind('beforeunload', function () {
+		var serverParticipants = Storage.get("participants", []);
+		serverParticipants.splice(serverParticipants.indexOf(PARTICIPANT), 1);
+		Storage.set("participants", serverParticipants);
+		removedParticipants_.push(PARTICIPANT);
+		});
+		*/
 
 		/*
 		Update loop
@@ -569,21 +616,30 @@ this.gapi = new function () {
 		}, UPDATE_RATE);
 
 
-		/*
-		gapi.hangout.av
-		*/
+
+
+
+
+
+		/*****************************************************\
+		*
+		* gapi.hangout.av
+		*
+		\*****************************************************/
 
 		this.av = new function () {
 
-			// private vars
+			/*
+			Private
+			*/
+
 			var isCameraMute_ = hasCamera_ = hasMicrophone_ = hasSpeakers_ = isMicrophoneMute_ = false,
 				volumes = {}
 
 
-			// private methods
-
-
-			// event classes
+			/*
+			Classes
+			*/
 
 			var CameraMuteEvent = function () {
 				/// <summary>Provides information about a CameraMute event.</summary>
@@ -621,8 +677,10 @@ this.gapi = new function () {
 				this.volumes = volumes_;
 			}
 
-			// public methods
 
+			/*
+			Functions
+			*/
 
 			this.clearAvatar = function (participantId) {
 				/// <summary>Resumes display of the video stream for a participant. Note this affects only the view of the local participant.</summary>
@@ -645,7 +703,6 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.getAvatar = function (participantId) {
@@ -657,7 +714,6 @@ this.gapi = new function () {
 				/// <returns type="string"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.getCameraMute = function () {
@@ -665,7 +721,6 @@ this.gapi = new function () {
 				/// <returns type="boolean"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.getMicrophoneMute = function () {
@@ -673,7 +728,6 @@ this.gapi = new function () {
 				/// <returns type="boolean"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.getParticipantVolume = function (participantId) {
@@ -682,7 +736,6 @@ this.gapi = new function () {
 				/// <returns type="number"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.getVolumes = function () {
@@ -694,7 +747,6 @@ this.gapi = new function () {
 				/// <returns type="Object.&lt;string, number&gt;"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.hasCamera = function () {
@@ -702,7 +754,6 @@ this.gapi = new function () {
 				/// <returns type="boolean"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.hasMicrophone = function () {
@@ -710,7 +761,6 @@ this.gapi = new function () {
 				/// <returns type="boolean"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.hasSpeakers = function () {
@@ -718,7 +768,6 @@ this.gapi = new function () {
 				/// <returns type="boolean"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.isParticipantAudible = function (participantId) {
@@ -727,7 +776,6 @@ this.gapi = new function () {
 				/// <returns type="number"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.isParticipantVisible = function (participantId) {
@@ -736,7 +784,6 @@ this.gapi = new function () {
 				/// <returns type="number"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.requestParticipantMicrophoneMute = function (participantId) {
@@ -745,7 +792,6 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.setParticipantAudioLevel = function (participantId, audioLevel) {
@@ -764,7 +810,6 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.setAvatar = function (participantId, imageUrl) {
@@ -777,7 +822,6 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.setCameraMute = function (muted) {
@@ -786,7 +830,6 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.clearCameraMute = function () {
@@ -794,7 +837,6 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.setMicrophoneMute = function (muted) {
@@ -803,7 +845,6 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.clearMicrophoneMute = function () {
@@ -811,7 +852,6 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.setParticipantAudible = function (participantId, audible) {
@@ -821,7 +861,6 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 			this.setParticipantVisible = function (participantId, visible) {
@@ -831,11 +870,12 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				console.error("Not implemented");
-
 			}
 
 
-			// event functions
+			/*
+			Event Functions
+			*/
 
 			this.onCameraMute = new function () {
 				var callbacks = [];
@@ -976,32 +1016,311 @@ this.gapi = new function () {
 
 			// setInterval(function() {}, UPDATE_RATE);
 
+
+			/*****************************************************\
+			*
+			* gapi.hangout.av.effects
+			*
+			\*****************************************************/
+
+			this.effects = new function () {
+
+				/*
+				Classes
+				*/
+
+				this.AudioResource = function (url) {
+					/// <summary>
+					///		Object used to load an audio file which can be used to play sound effects.
+					///		&#10; - Create an AudioResource with createAudioResource.
+					///	</summary>
+					/// <param name="url" type="string">Private variable for local use</param>
+					var url_ = url;
+
+					this.createSound = function (opt_params) {
+						/// <summary>Creates a new instance of a sound effect.</summary>
+						/// <param name="opt_params" type="Object">{loop: boolean, volume: number}</param>
+						/// <returns type="gapi.hangout.av.effects.Sound"></returns>
+					}
+
+					this.getUrl = function () {
+						/// <summary>Returns the URL of the audio file for the resource.</summary>
+						/// <returns type="string"></returns>
+					}
+
+					this.play = function (opt_params) {
+						/// <summary>Creates a new instance of a sound effect and starts it playing.</summary>
+						/// <param name="opt_params" type="Object">{loop: boolean, volume: number}</param>
+						/// <returns type="gapi.hangout.av.effects.Sound"></returns>
+					}
+
+				}
+
+				this.FaceTrackingOverlay = function () {
+					/// <summary>
+					///		Object used to control one instance of an image overlaid on the video feed of the local participant.
+					///		&#10; - Only one overlay can be visible at a time.
+					///		&#10; - Create a FaceTrackingOverlay using createFaceTrackingOverlay or showFaceTrackingOverlay.
+					///	</summary>
+
+					this.FaceTrackingFeature = {
+						LEFT_EYE: "LEFT_EYE",
+						LOWER_LIP: "LOWER_LIP",
+						NOSE_ROOT: "NOSE_ROOT",
+						NOSE_TIP: "NOSE_TIP",
+						RIGHT_EYE: "RIGHT_EYE",
+						UPPER_LIP: "UPPER_LIP",
+					};
+
+					this.getImageResource = function () {
+						/// <summary>Returns the ImageResource used to create this object.</summary>
+						/// <returns type="gapi.hangout.av.effects.ImageResource"></returns>
+					}
+
+					this.getOffset = function () {
+						/// <summary>
+						///		Returns the offset of the image overlay from the feature.
+						///		&#10; - See setOffset for a description of the x and y values.
+						///	</summary>
+						/// <returns type="Object&lt;x:number,y:number&gt;"></returns>
+					}
+
+					this.getRotateWithFace = function () {
+						/// <summary>Returns whether the image will rotate as the face rotates.</summary>
+						/// <returns type="boolean"></returns>
+					}
+
+					this.getRotation = function () {
+						/// <summary>
+						///		Returns the base rotation of an image in radians.
+						///		&#10; - This does not include any rotation occurring because of the getRotateWithFace flag.
+						///	</summary>
+						/// <returns type="number"></returns>
+					}
+
+					this.getScale = function () {
+						/// <summary>
+						///		Returns the scale in relation to the natural image size of the overlay.
+						///		&#10; - This does not include any scaling occurring because of the getScaleWithFace flag.
+						///	</summary>
+						/// <example>A scale of 2 would cause the image to be twice its natural size.</example>
+						/// <returns type="number"></returns>
+					}
+
+					this.getScaleWithFace = function () {
+						/// <summary>Returns whether the size of the image will scale with the size of the face that is being tracked.</summary>
+						/// <returns type="boolean"></returns>
+					}
+
+					this.getTrackingFeature = function () {
+						/// <summary>Returns the feature of the face that the image overlay is attached to.</summary>
+						/// <returns type="gapi.hangout.av.effects.FaceTrackingFeature"></returns>
+					}
+
+					this.isVisible = function () {
+						/// <summary>
+						///		Returns whether the image overlay is currently visible in the local participant's video feed.
+						///		&#10; - There can be only one overlay visible at a time in any given video stream.
+						///	</summary>
+						/// <returns type="boolean"></returns>
+					}
+
+					this.setOffset = function (value, opt_y) {
+						/// <summary>
+						///		Sets the offset of the image overlay from the feature of the face being tracked.
+						///		&#10; - With an offset of (0,0), the overlay is centered on the feature.
+						///		&#10;
+						///		The x offset ranges from -1 to 1, where 1 is the width of the video feed, and positive values move the overlay toward the right.
+						///		&#10; - The y offset also ranges from -1 to 1, where 1 is the height of the video feed, and postive values move the overlay toward the bottom.
+						///	</summary>
+						///	<param name="value" type="number|Object.&lt;x:number,y:number&gt;">Either a single number representing the x offset, or an object with the x, y offset.</param>
+						//	<param name="opt_y" type="number">The y offset (this parameter is ignored if value is an object.)</param>
+						/// <returns type="undefined"></returns>
+					}
+
+					this.setRotateWithFace = function (shouldRotate) {
+						/// <summary>Sets whether the image should rotate as the face rotates.</summary>
+						///	<param name="shouldRotate" type="boolean">Whether the image should rotate with the face.</param>
+						/// <returns type="undefined"></returns>
+					}
+
+					this.setRotation = function (rotation) {
+						/// <summary>
+						///		Sets the rotation for an image.
+						///		&#10; - This will be in addition to any rotation caused by setRotateWithFace.
+						///	</summary>
+						///	<param name="rotation" type="number">The angle of rotation for the image, in radians.</param>
+						/// <returns type="undefined"></returns>
+					}
+
+					this.setScale = function (scale) {
+						/// <summary>Sets the amount an image should be scaled.</summary>
+						///	<param name="scale" type="number">The amount an image should be scaled relative to it's normal size.</param>
+						/// <returns type="undefined"></returns>
+					}
+
+					this.setScaleWithFace = function (shouldScale) {
+						/// <summary>Sets whether an image should scale as the face being tracked gets larger or smaller.</summary>
+						///	<param name="shouldScale" type="boolean">Whether the image should scale with the face. of the face.</param>
+						/// <returns type="undefined"></returns>
+					}
+
+					this.setTrackingFeature = function (feature) {
+						/// <summary>Sets the face feature that the image overlay is attached to.</summary>
+						///	<param name="feature" type="gapi.hangout.av.effects.FaceTrackingFeature">The feature to track.</param>
+						/// <returns type="undefined"></returns>
+					}
+
+					this.setVisible = function (visible) {
+						/// <summary>
+						///		Sets the image overlay to be visible or not.
+						///		&#10; - Each time your app calls setVisible(true), it sets the overlay to be visible and automatically hides all other overlays.
+						///	</summary>
+						///	<param name="visible" type="boolean">Whether the the overlay is visible.</param>
+						/// <returns type="undefined"></returns>
+					}
+
+				}
+
+				this.ImageResource = function (url) {
+					/// <summary>
+					///		Object used to load an image file which can be overlaid on the video feed.
+					///		&#10; - Create an ImageResource with createImageResource.
+					///	</summary>
+					/// <param name="url" type="string">Private variable for local use</param>
+					var url_ = url;
+
+					this.createFaceTrackingOverlay = function (opt_params) {
+						/// <summary>Creates a new instance of a face tracking overlay with this image.</summary>
+						///	<param name="opt_params" type="Object&lt;trackingFeature:gapi.hangout.av.effects.FaceTrackingFeature,offset:&lt;x:number,y:number&gt;,rotateWithFace:boolean,rotation:number,scale:number,scaleWithFace:boolean&gt;">The options for the newly created image overlay.</param>
+						/// <returns type="gapi.hangout.av.effects.FaceTrackingOverlay"></returns>
+					}
+
+					this.showFaceTrackingOverlay = function (opt_params) {
+						/// <summary>
+						///		Creates a new instance of a face tracking overlay with this image and starts displaying it.
+						///		&#10; - Each time your app shows a new overlay with this function, it automatically hides all other overlays.
+						///	</summary>
+						///	<param name="opt_params" type="Object&lt;trackingFeature:gapi.hangout.av.effects.FaceTrackingFeature,offset:&lt;x:number,y:number&gt;,rotateWithFace:boolean,rotation:number,scale:number,scaleWithFace:boolean&gt;">The options for the newly created image overlay.</param>
+						/// <returns type="gapi.hangout.av.effects.FaceTrackingOverlay"></returns>
+					}
+
+					this.getUrl = function() {
+						/// <summary>The URL of the image file for the resource.</summary>
+						/// <returns type="string"></returns>
+					}
+
+				}
+
+				this.Sound = function () {
+					/// <summary>
+					///		Object used to control one instance of a sound effect.
+					///		&#10; - Sounds played through this API will automatically be echo-cancelled.
+					//		&#10; - You can have many instances of AudioResources available, but can play only one Sound at a time.
+					///		&#10; - Create a Sound using createAudioResource.
+					///	</summary>
+
+					this.getAudioResource = function() {
+						/// <summary>The AudioResource used to create this Sound.</summary>
+						/// <returns type="gapi.hangout.av.effects.AudioResource"></returns>
+					}
+
+					this.getVolume = function() {
+						/// <summary>The volume, in the range 0-1, of the sound effect.</summary>
+						/// <returns type="number"></returns>
+					}
+
+					this.isLooped = function() {
+						/// <summary>Returns true if the sound effect will repeat.</summary>
+						/// <returns type="boolean"></returns>
+					}
+
+					this.play = function() {
+						/// <summary>Starts playing the sound effect.</summary>
+						/// <returns type="undefined"></returns>
+					}
+
+					this.setLoop = function(loop) {
+						/// <summary>Sets whether the sound effect will repeat or not.</summary>
+						///	<param name="loop" value="boolean">Whether the sound effect will repeat.</param>
+						/// <returns type="undefined"></returns>
+					}
+
+					this.setVolume = function(volume) {
+						/// <summary>Sets the volume of the sound effect.</summary>
+						///	<param name="volume" value="number">The desired volume of the sound effect, in the range 0-1.</param>
+						/// <returns type="undefined"></returns>
+					}
+
+					this.stop = function() {
+						/// <summary>Stops the sound effect if it is currently playing.</summary>
+						/// <returns type="undefined"></returns>
+					}
+
+				}
+
+
+				/*
+				Functions
+				*/
+
+				this.createAudioResource = function(url) {
+					/// <summary>
+					///		Creates a new AudioResource.
+					///		&#10; [!] Warning: Creating an audio or image resource will allocate memory in the plugin. At this time, you cannot release these resources, so allocating too many resources can cause the hangout to run out of memory and halt.
+					///	</summary>
+					///	<param name="url" value="string">
+					///		The URL of the sound file.
+					///		&#10; - Only 16 bit PCM encoded WAV files are supported and loading is only supported over http.
+					///	</param>
+					/// <returns type="gapi.hangout.av.effects.AudioResource"></returns>
+					
+					return new gapi.hangout.av.effects.AudioResource(url);
+
+				}
+
+				this.createImageResource = function(url) {
+					/// <summary>
+					///		Creates a new gapi.hangout.av.effects.ImageResource.
+					///		&#10; [!] Warning: Creating an audio or image resource will allocate memory in the plugin. At this time, you cannot release these resources, so allocating too many resources can cause the hangout to run out of memory and halt.
+					///	</summary>
+					///	<param name="url" value="string">
+					///		The URL of the image.
+					///		&#10; - Only PNG and JPEG files are supported and loading is only supported over http.
+					///	</param>
+					/// <returns type="gapi.hangout.av.effects.ImageResource"></returns>
+
+					return new gapi.hangout.av.effects.ImageResource(url);
+				}
+
+
+			}
+
 		}
 
 
 
 
 
-		/*
-		gapi.hangout.data
-		*/
+		/*****************************************************\
+		*
+		* gapi.hangout.data
+		*
+		\*****************************************************/
 
 		this.data = new function () {
 
 
+			/*
+			Private
+			*/
 
-			// private vars
-
-			var this_ = this,
-				localDelta = {
-					updates: [],
-					removes: [],
-					timestamp: getDelta().timestamp
-				};
-
-
-
-			// private methods
+			var self = this,
+					localDelta = {
+						updates: [],
+						removes: [],
+						timestamp: getDelta().timestamp
+					};
 
 			function getDelta() {
 				return Storage.get("delta", {
@@ -1013,9 +1332,11 @@ this.gapi = new function () {
 
 
 
-			// event classes
+			/*
+			Classes
+			*/
 
-			function StateChangedEvent(addedKeys, removedKeys) {
+			var StateChangedEvent = function(addedKeys, removedKeys) {
 				/// <summary>Contains information relating to a change in the shared state.</summary>
 				/// <param name="addedKeys" type="Array.&lt;Object&gt;">
 				///		An array containing the newly added entries to the state metadata.
@@ -1031,15 +1352,15 @@ this.gapi = new function () {
 				///		The shared state, also available via getState.
 				///	</param>
 
-
 				this.addedKeys = addedKeys || [];
-				this.metadata = this_.getStateMetadata();
+				this.metadata = self.getStateMetadata();
 				this.removedKeys = removedKeys || [];
-				this.state = this_.getState();
+				this.state = self.getState();
 			}
 
-
-			// public methods
+			/*
+			Functions
+			*/
 
 			this.clearValue = function (key) {
 				/// <summary>Clears a single key/value pair.</summary>
@@ -1067,10 +1388,11 @@ this.gapi = new function () {
 
 			this.getState = function () {
 				/// <summary>Gets the shared state object, a set of name/value pairs.</summary>
-				/// <returns type="Object.&lt;string, string&gt;"></returns>
+				/// <returns type="Object.&lt;string,string&gt;"></returns>
 				var state = Storage.get("state", {});
 				return state;
 			}
+
 
 			this.getStateMetadata = function () {
 				/// <summary>
@@ -1081,11 +1403,11 @@ this.gapi = new function () {
 				///		&#10;	timestamp:	The server time that the key/value was most recently updated.
 				///		&#10;	timediff:		The difference in time on the server between the current time and the time the key/value was most recently updated.
 				///	</summary>
-				/// <returns type="Object.&lt;string, Object&gt;"></returns>
+				/// <returns type="Object.&lt;string,Object&gt;"></returns>
 
 				var retVal = {},
-					timestamps = getTimestamps(),
-					currentTime = newTimestamp();
+						timestamps = getTimestamps(),
+						currentTime = newTimestamp();
 				$.each(this.getState(), function (stateKey, stateValue) {
 					retVal[stateKey] = {
 						key: stateKey,
@@ -1123,7 +1445,7 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				var delta = getDelta(),
-					timestamp = newTimestamp();
+						timestamp = newTimestamp();
 
 				if (!$.isEmptyObject(opt_updates)) {
 					var updateObj = {
@@ -1151,7 +1473,9 @@ this.gapi = new function () {
 
 			}
 
-			// public events
+			/*
+			Event Functions
+			*/
 
 			this.onStateChanged = new function () {
 				var callbacks = [];
@@ -1196,8 +1520,8 @@ this.gapi = new function () {
 			setInterval(function () {
 
 				var eventsToDispatch = [],
-					currentTimestamp = newTimestamp(),
-					delta = getDelta();
+						currentTimestamp = newTimestamp(),
+						delta = getDelta();
 
 
 
@@ -1267,8 +1591,8 @@ this.gapi = new function () {
 
 					$.each(localUpdateItem.updates, function (localUpdateKey, localUpdateValue) {
 
-						var state = this_.getState(),
-							timestamps = getTimestamps();
+						var state = self.getState(),
+								timestamps = getTimestamps();
 
 
 						// assuming that whoever is setting the state has gone through the process of getting the latest data
@@ -1292,7 +1616,7 @@ this.gapi = new function () {
 
 				if (eventsToDispatch.length > 0) {
 					$.each(eventsToDispatch, function (i, evt) {
-						this_.onStateChanged.trigger_(evt);
+						self.onStateChanged.trigger_(evt);
 					});
 				}
 
@@ -1327,5 +1651,4 @@ this.gapi = new function () {
 
 	}
 
-}
-
+}

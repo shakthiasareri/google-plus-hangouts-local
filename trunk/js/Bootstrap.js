@@ -1,8 +1,6 @@
-console.log(gapi.hangout);
-console.log($);
 gapi.hangout.onApiReady.add(function (eventObj) {
 	if (eventObj.isApiReady) {
-		$.getJSON("https://(PATH)/html/uiproxy.php?callback=?", function (resp) {
+		$.getJSON("https://secure766.hostgator.com/~wparry/google-plus-hangouts-local/html/uiproxy.php?callback=?", function (resp) {
 			
 			var range = document.createRange();
 			range.selectNode(document.body);
@@ -10,7 +8,7 @@ gapi.hangout.onApiReady.add(function (eventObj) {
 			document.head.appendChild(documentFragment.querySelectorAll("style")[0]);
 			document.body.appendChild(documentFragment.querySelectorAll("#UI")[0]);
 
-			App.DEBUG_HANGOUT = false;
+			App.DEBUG_HANGOUT = true;
 			App.start();
 		});
 	}
