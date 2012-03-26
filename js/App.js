@@ -1,4 +1,5 @@
 /// <reference path="helpers/jquery-vsdoc.js" />
+/// <reference path="helpers/hangout-vsdoc.js" />
 /// <reference path="helpers/hangout.js" />
 
 var App = {
@@ -12,9 +13,11 @@ var App = {
 			console.warn('Debug hangout enabled. This will print all the internals of Google+ Hangouts API, and give you commands to query the API');
 			console.log('-- Press ALT + SHIFT + F1 to toggle the command overlay --');
 
-			/*
-			Participants
-			*/
+			/*****************************************************\
+			*
+			* Participants
+			*
+			\*****************************************************/
 
 			function inspectParticipantsEvent(eventName, participants) {
 
@@ -72,10 +75,11 @@ var App = {
 				inspectParticipantsEvent('onParticipantsRemoved', evt.removedParticipants);
 			});
 
-
-			/*
-			Data
-			*/
+			/*****************************************************\
+			*
+			* Data
+			*
+			\*****************************************************/
 
 			// onStateChanged
 			// https://developers.google.com/+/hangouts/reference#gapi.hangout.data.onStateChanged
@@ -119,9 +123,11 @@ var App = {
 				console.groupEnd();
 			});
 
-			/*
-			Commands
-			*/
+			/*****************************************************\
+			*
+			* Commands
+			*
+			\*****************************************************/
 
 			// uses keycodes
 			var CMD = {
@@ -273,6 +279,16 @@ var App = {
 							console.log(undefined);
 						}
 					}
+				],
+				'gapi.hangout.av': [
+					{
+						name: 'clearAvatar(participantId:string)',
+						description: 'Resumes display of the video stream for a participant. Note this affects only the view of the local participant.',
+						returns: 'undefined',
+						method: function () {
+							gapi.hangout.av.clearAvatar(gapi.hangout.getParticipantId());
+						}
+					}
 				]
 			};
 
@@ -336,9 +352,11 @@ var App = {
 		}
 
 
-		/*
-		Demo
-		*/
+		/*****************************************************\
+		*
+		* Demo
+		*
+		\*****************************************************/
 
 
 		var EWrap = $("#UI"),

@@ -12,8 +12,14 @@ this.gapi = new function () {
 	this.hangout = new function () {
 
 
+		/*****************************************************\
+		*
+		* Helpers
+		*
+		\*****************************************************/
+
 		/*
-		Helpers
+		Storage
 		*/
 
 		var Storage = new function () {
@@ -71,6 +77,41 @@ this.gapi = new function () {
 
 		}
 
+		/*
+		Communication with parent UI
+		*/
+		
+		var HangoutUI = new function () {
+			var listeners = {};
+			this.cmd = function(cmd, data) {
+				parent.postMessage(JSON.stringify({cmd: cmd, data: data}), "*");
+			}
+			this.addListener = function (cmd, callback) {
+				
+				if(!listeners[cmd]) {
+					listeners[cmd] = [];
+				}
+				listeners[cmd].push(callback);
+			}
+			this.removeListener = function (cmd, callback) {
+				if(listeners[cmd]) {
+					var ind = listeners[cmd].indexOf(callback);
+					if(ind !== -1) {
+						listeners.splice(ind, 1);
+					}
+				}
+			}
+			parent.addEventListener("message", function(resp) {
+				var resp = JSON.parse(resp.data);
+				if(listeners[resp.cmd]) {
+					$.each(listeners[resp.cmd], function(listenerIndex, listener) {
+						listener(resp.data);
+					});
+				}
+			}, false);
+
+		}
+		
 		function makeIdHelper_(num) {
 			var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz",
 				str = "";
@@ -687,9 +728,13 @@ this.gapi = new function () {
 				/// <param name="participantId" type="string">The id of the participant.</param>
 				/// <returns type="undefined"></returns>
 
-				console.error("Not implemented");
-				// TODO parent.postMessage("message", "*");
+				HangoutUI.addListener("gapi.hangout.av.hi", function(e) {
+					console.log(e);
+				});
 
+				HangoutUI.cmd("gapi.hangout.av.clearAvatar", participantId);
+
+				return undefined;
 			}
 
 			// BUG: Should return 2 element array

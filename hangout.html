@@ -65,12 +65,40 @@
 		
 	</style>
 
+	<script src="js/helpers/json2.min.js"></script>
+
 	<script>
 
-		window.addEventListener("message", receiveMessage, false);
+		
 
-		function receiveMessage(event) {
-			alert('a');  
+		window.addEventListener("message", handleCMD, false);
+
+		function handleCMD(event) {
+
+			var data = JSON.parse(event.data),
+				cmdData = data.cmd.split("."),
+				method = cmdData.splice(cmdData.length - 1).toString(),
+				namespace = cmdData.join(".");
+
+			switch (namespace) {
+
+				case "gapi.hangout.av":
+
+					switch (method) {
+
+						case "clearAvatar":
+
+							window.postMessage(JSON.stringify({ cmd: "gapi.hangout.av.hi", data: { test: "hi"} }), "*");
+
+
+							break;
+
+					}
+
+					break;
+
+			}
+
 		}  
 
 	</script>
