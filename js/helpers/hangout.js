@@ -84,7 +84,10 @@ this.gapi = new function () {
 		var HangoutUI = new function () {
 			var listeners = {};
 			this.cmd = function(cmd, data) {
-				parent.postMessage(JSON.stringify({cmd: cmd, data: data}), "*");
+				console.groupCollapsed("Hangout sent command:", cmd);
+				console.log(data);
+				console.groupEnd();
+				parent.postMessage(JSON.stringify({cmd: cmd, data: data}), parent.location.href);
 			}
 			this.addListener = function (cmd, callback) {
 				
@@ -101,13 +104,18 @@ this.gapi = new function () {
 					}
 				}
 			}
-			parent.addEventListener("message", function(resp) {
+			window.addEventListener("message", function(resp) {
+				if(resp.source.location.href == window.location.href) return;
 				var resp = JSON.parse(resp.data);
+				console.groupCollapsed("Hangout received command:", resp.cmd);
+				console.log(resp.data);
+				console.groupEnd();
 				if(listeners[resp.cmd]) {
 					$.each(listeners[resp.cmd], function(listenerIndex, listener) {
 						listener(resp.data);
 					});
 				}
+				
 			}, false);
 
 		}
@@ -729,7 +737,7 @@ this.gapi = new function () {
 				/// <returns type="undefined"></returns>
 
 				HangoutUI.addListener("gapi.hangout.av.hi", function(e) {
-					console.log(e);
+					console.log("got it", e);
 				});
 
 				HangoutUI.cmd("gapi.hangout.av.clearAvatar", participantId);
