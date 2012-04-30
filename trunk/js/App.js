@@ -23,6 +23,8 @@ var App = {
 
 				console.groupCollapsed('Event:', eventName);
 
+				console.log(participants);
+
 				$.each(participants, function (participantIndex, participant) {
 					console.group('participant');
 					console.log('displayIndex', participant.displayIndex);
