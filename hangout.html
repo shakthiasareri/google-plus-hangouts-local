@@ -120,6 +120,10 @@
 							case "clearAvatar":
 								console.log("Hangout UI send command: gapi.hangout.av.hi");
 								EIFrame.contentWindow.postMessage(JSON.stringify({ cmd: "gapi.hangout.av.hi", data: { test: "hi"} }), "*");
+								break;
+
+							case "setCameraMute":
+								
 
 
 								break;

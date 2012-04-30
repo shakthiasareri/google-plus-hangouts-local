@@ -755,7 +755,7 @@ this.gapi = new function () {
 				/// <param name="participantId" type="string">The id of the participant.</param>
 				/// <returns type="undefined"></returns>
 
-				console.error("Not implemented");
+				return [2,3];
 			}
 
 			this.getAvatar = function (participantId) {
@@ -773,14 +773,14 @@ this.gapi = new function () {
 				/// <summary>Returns true if the local participants camera is currently sending video; false otherwise.</summary>
 				/// <returns type="boolean"></returns>
 
-				console.error("Not implemented");
+				return isCameraMute__;
 			}
 
 			this.getMicrophoneMute = function () {
 				/// <summary>Returns true if the mic is muted for the local participant; false otherwise.</summary>
 				/// <returns type="boolean"></returns>
 
-				console.error("Not implemented");
+				return isMicrophoneMute_;
 			}
 
 			this.getParticipantVolume = function (participantId) {
@@ -806,21 +806,21 @@ this.gapi = new function () {
 				/// <summary>Returns true if the local participant has an active camera, false otherwise.</summary>
 				/// <returns type="boolean"></returns>
 
-				console.error("Not implemented");
+				return hasCamera_;
 			}
 
 			this.hasMicrophone = function () {
 				/// <summary>Returns true if the local participant has a working mic, false otherwise.</summary>
 				/// <returns type="boolean"></returns>
 
-				console.error("Not implemented");
+				return hasMicrophone_;
 			}
 
 			this.hasSpeakers = function () {
 				/// <summary>True if the local participant has working audio speakers, false otherwise.</summary>
 				/// <returns type="boolean"></returns>
 
-				console.error("Not implemented");
+				return hasSpeakers_;
 			}
 
 			this.isParticipantAudible = function (participantId) {
@@ -882,7 +882,7 @@ this.gapi = new function () {
 				/// <param name="muted" type="boolean">True if the local participant should stop sending video.</param>
 				/// <returns type="undefined"></returns>
 
-				console.error("Not implemented");
+				HangoutUI.cmd("goog.hangout.av.setCameraMute", muted);
 			}
 
 			this.clearCameraMute = function () {
@@ -1704,4 +1704,5 @@ this.gapi = new function () {
 
 	}
 
-}
+
+}

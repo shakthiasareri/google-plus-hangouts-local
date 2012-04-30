@@ -1,6 +1,6 @@
 gapi.hangout.onApiReady.add(function (eventObj) {
 	if (eventObj.isApiReady) {
-		$.getJSON("https://secure766.hostgator.com/~wparry/google-plus-hangouts-local/html/uiproxy.php?callback=?", function (resp) {
+		$.getJSON("https://www.williamparry.com/google-plus-hangouts-local/html/uiproxy.php?callback=?", function (resp) {
 			
 			var range = document.createRange();
 			range.selectNode(document.body);
